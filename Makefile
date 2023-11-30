@@ -2,10 +2,10 @@ NAME = leo_scop
 CC = g++
 # -Wall -Werror -Wextra
 CFLAGS =  -std=c++11
-OPENGL = -lglfw3 -lGL
+OPENGL = -lglfw3 -lGL -lX11
 #OPENGL = -lglut -lGLU -lGL -lGLEW -lglfw  
 
-SRCS =	main.cpp glad.c
+SRCS =	main.cpp glad.c shader.cpp
 
 all: COMP
 
