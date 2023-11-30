@@ -2,14 +2,15 @@ NAME = leo_scop
 CC = g++
 # -Wall -Werror -Wextra
 CFLAGS =  -std=c++11
-OPENGL = -lglut -lGLU -lGL -lGLEW -lglfw  
+OPENGL = -lglfw3 -lGL
+#OPENGL = -lglut -lGLU -lGL -lGLEW -lglfw  
 
-SRCS =	main.cpp
+SRCS =	main.cpp glad.c
 
 all: COMP
 
 COMP: $(SRCS)
-	$(CC) $(CFLAGS) $(SRCS) -o $(NAME)
+	$(CC) $(CFLAGS) $(SRCS) -Llib -Iinclude $(OPENGL) -o $(NAME)
 
 
 
