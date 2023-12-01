@@ -1,5 +1,6 @@
 #include <classes/shader.h>
 
+
 Shader::Shader(const char* vertexPath, const char* fragmentPath)
 {
     // 1. retrieve the vertex/fragment source code from filePath
@@ -69,6 +70,9 @@ void Shader::setFloat(const std::string &name, float value) const {
 }
 void Shader::setFloat4(const std::string &name, float value1, float value2, float value3, float value4) const { 
     glUniform4f(glGetUniformLocation(ID, name.c_str()), value1 , value2, value3, value4); 
+}
+void Shader::setmat4(const std::string &name, glm::mat4 value) const { 
+    glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, glm::value_ptr(value));
 }
 
 void Shader::checkCompileErrors(unsigned int shader, std::string type)

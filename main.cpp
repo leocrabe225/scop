@@ -1,10 +1,15 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include <classes/shader.h>
 
 #include <iostream>
 #include <math.h>
+
+#include <ctime>
 
 #define DEFAULT_WINDOW_WIDTH 800
 #define DEFAULT_WINDOW_HEIGHT 600
@@ -51,45 +56,113 @@ int main() {
     Shader *shader = new Shader("vertex_shader.glsl", "fragment_shader.glsl");
     shader->use();
 
+    glEnable(GL_DEPTH_TEST);  
+
     unsigned int VAO;
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
 
+    std::srand(std::time(nullptr));
+
+    float offset  = 0.0f;
+    /*float *vertices = new float[48];
+    for (int z = 0; z < 2; z++) {
+        for (int y = 0; y < 2; y++) {
+            for (int x = 0; x < 2; x++) {
+                vertices[(z * 2 * 2 + y * 2 + x) * 6] = -0.5f + (float)x;
+                vertices[(z * 2 * 2 + y * 2 + x) * 6 + 1] = -0.5f + (float)y;
+                vertices[(z * 2 * 2 + y * 2 + x) * 6 + 2] = -0.5f + (float)z;
+                vertices[(z * 2 * 2 + y * 2 + x) * 6 + 3] = (float)(std::rand() % 256) / 256;
+                vertices[(z * 2 * 2 + y * 2 + x) * 6 + 4] = (float)(std::rand() % 256) / 256;
+                vertices[(z * 2 * 2 + y * 2 + x) * 6 + 5] = (float)(std::rand() % 256) / 256;
+                }
+        }
+    }*/
     float vertices[] = {
-     0.5f,  0.5f, 0.0f,  // top right
-     0.5f, -0.5f, 0.0f,  // bottom right
-    -0.5f, -0.5f, 0.0f,  // bottom left
-    -0.5f,  0.5f, 0.0f   // top left 
+        0.5f,  0.5f, 0.0f,  // front top right
+        (float)(std::rand() % 256) / 256, (float)(std::rand() % 256) / 256, (float)(std::rand() % 256) / 256,
+        0.5f, -0.5f, 0.0f,  // front bottom right
+        (float)(std::rand() % 256) / 256, (float)(std::rand() % 256) / 256, (float)(std::rand() % 256) / 256,
+        -0.5f, -0.5f, 0.0f,  // front bottom left
+        (float)(std::rand() % 256) / 256, (float)(std::rand() % 256) / 256, (float)(std::rand() % 256) / 256,
+        -0.5f,  0.5f, 0.0f,   // front top left
+        (float)(std::rand() % 256) / 256, (float)(std::rand() % 256) / 256, (float)(std::rand() % 256) / 256,
+        0.5f,  0.5f, 1.0f,  // back top right
+        (float)(std::rand() % 256) / 256, (float)(std::rand() % 256) / 256, (float)(std::rand() % 256) / 256,
+        0.5f, -0.5f, 1.0f,  // back bottom right
+        (float)(std::rand() % 256) / 256, (float)(std::rand() % 256) / 256, (float)(std::rand() % 256) / 256,
+        -0.5f, -0.5f, 1.0f,  // back bottom left
+        (float)(std::rand() % 256) / 256, (float)(std::rand() % 256) / 256, (float)(std::rand() % 256) / 256,
+        -0.5f,  0.5f, 1.0f, // back top left
+        (float)(std::rand() % 256) / 256, (float)(std::rand() % 256) / 256, (float)(std::rand() % 256) / 256,
     };
+    for (int i = 0; i < 48; i += 6) {
+        std::cout << vertices[i] << " " << vertices[i+1] << " " << vertices[i+2]<< std::endl;
+        std::cout << vertices[i+3] << " " << vertices[i+4] << " " << vertices[i+5] << std::endl << std::endl;
+    }
+    std::cout  << (float)(std::rand() % 256) / 256 << " " << (float)(std::rand() % 256) / 256 << " " << (float)(std::rand() % 256) / 256  << std::endl;
     unsigned int indices[] = {  // note that we start from 0!
         0, 1, 3,   // first triangle
-        1, 2, 3    // second triangle
+        1, 2, 3 ,   // second triangle
+        0,1,4,
+        1,4,5,
+        2,3,7,
+        2,6,7,
+        4,5,6,
+        4,6,7,
+        1,2,5,
+        2,5,6,
+        0,3,4,
+        3,4,7
     };
     unsigned int VBO; // Vertex buffer objects
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, 48*4, vertices, GL_STATIC_DRAW);
 
     unsigned int EBO;
     glGenBuffers(1, &EBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);  
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)12);
+    glEnableVertexAttribArray(1);
+
 
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f); // Sets clear color
-    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE) draw as lines
-    //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL) default draw (filled)
+    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); //draw as lines
+    //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // default draw (filled)
+
+    glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float)DEFAULT_WINDOW_WIDTH/(float)DEFAULT_WINDOW_HEIGHT, 0.1f, 100.0f);
+    glm::mat4 view = glm::mat4(1.0f);
+    view = proj * glm::translate(view, glm::vec3(0.0f, 0.0f, -3.2f));
+    
+    float rand1 = (float)(std::rand() % 100) / 100;
+    float rand2 = (float)(std::rand() % 100) / 100;
+    float rand3 = (float)(std::rand() % 100) / 100;
+    float normalize = (rand1 * rand1 + rand2 * rand2 + rand3 * rand3);
+    rand1 /= normalize;
+    rand2 /= normalize;
+    rand3 /= normalize;
+    
+    float angle = 0;
+
     while(!glfwWindowShouldClose(window)) //If window has not been instructed to close, continue
     {
+        angle += 0.5f;
         processInput(window);
 
-        glClear(GL_COLOR_BUFFER_BIT); // Clears window with set clear color
+        glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT); // Clears window with set clear color
         float timeValue = glfwGetTime();
-        float greenValue = sin(timeValue) / 2.0f + 0.5f;
-        shader->setFloat4("ourColor", 0.0f, greenValue, 0.0f, 1.0f);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        float greenValue = sin(timeValue * 3) / 2.0f + 0.5f;
+        float redValue = sin(timeValue * 2) / 2.0f + 0.5f;
+        float blueValue = sin(timeValue * 1) / 2.0f + 0.5f;
+        shader->setFloat4("ourColor", redValue, greenValue, blueValue, 1.0f);
+        glm::mat4 view2 = glm::rotate(view, glm::radians(angle), glm::vec3(rand1, rand2, rand3));
+        shader->setmat4("proj", view2);
+        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
         //glDrawArrays(GL_TRIANGLES, 0, 3);
 
         glfwSwapBuffers(window); //Swaps Window buffers to avoid flickering
