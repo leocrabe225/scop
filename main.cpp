@@ -5,6 +5,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include <classes/shader.h>
+#include <classes/parser.h>
 
 #include <iostream>
 #include <math.h>
@@ -25,14 +26,23 @@ void processInput(GLFWwindow *window)
         glfwSetWindowShouldClose(window, true); // Tell GLFW that window should close (The loop will close)
 }
 
-int main() {
+int main(int argc, char **argv) {
+    if (argc < 2) {
+        return (1);
+    }
+    Parser *parser = new Parser();
+    std::vector<DotObj*> objectList = parser->parseFile(argv[1]);
+    if (objectList.size() == 0) {
+        return (1);
+    }
+    std::cout << objectList[0]->getVerticesSize() << " " << objectList[0]->getIndexesSize() <<  std::endl;
 
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);  //OpenGL version ->4.3
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);  //OpenGL version   4.3<-
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); //We use the core profile because we want to use the modulable part of OpenGL
 
-    GLFWwindow* window = glfwCreateWindow(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT, "Scop", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT, objectList[0]->getName().c_str(), NULL, NULL);
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -51,7 +61,7 @@ int main() {
     
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback); // We tell glfw which function to call whenever window is resized
 
-    std::cout << "Project is alive" << std::endl;
+    //std::cout << "Project is alive" << std::endl;
 
     Shader *shader = new Shader("vertex_shader.glsl", "fragment_shader.glsl");
     shader->use();
@@ -96,11 +106,11 @@ int main() {
         -0.5f,  0.5f, 1.0f, // back top left
         (float)(std::rand() % 256) / 256, (float)(std::rand() % 256) / 256, (float)(std::rand() % 256) / 256,
     };
-    for (int i = 0; i < 48; i += 6) {
+    /*for (int i = 0; i < 48; i += 6) {
         std::cout << vertices[i] << " " << vertices[i+1] << " " << vertices[i+2]<< std::endl;
         std::cout << vertices[i+3] << " " << vertices[i+4] << " " << vertices[i+5] << std::endl << std::endl;
     }
-    std::cout  << (float)(std::rand() % 256) / 256 << " " << (float)(std::rand() % 256) / 256 << " " << (float)(std::rand() % 256) / 256  << std::endl;
+    std::cout  << (float)(std::rand() % 256) / 256 << " " << (float)(std::rand() % 256) / 256 << " " << (float)(std::rand() % 256) / 256  << std::endl;*/
     unsigned int indices[] = {  // note that we start from 0!
         0, 1, 3,   // first triangle
         1, 2, 3 ,   // second triangle
@@ -118,17 +128,17 @@ int main() {
     unsigned int VBO; // Vertex buffer objects
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, 48*4, vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, objectList[0]->getVerticesSize(), objectList[0]->getVerticesData(), GL_STATIC_DRAW);
 
     unsigned int EBO;
     glGenBuffers(1, &EBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, objectList[0]->getIndexesSize(), objectList[0]->getIndexesData(), GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)12);
-    glEnableVertexAttribArray(1);
+    //glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)12);
+    //glEnableVertexAttribArray(1);
 
 
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f); // Sets clear color
@@ -137,7 +147,7 @@ int main() {
 
     glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float)DEFAULT_WINDOW_WIDTH/(float)DEFAULT_WINDOW_HEIGHT, 0.1f, 100.0f);
     glm::mat4 view = glm::mat4(1.0f);
-    view = proj * glm::translate(view, glm::vec3(0.0f, 0.0f, -3.2f));
+    view = proj * glm::translate(view, glm::vec3(0.0f, 0.0f, -10.0f));
     
     float rand1 = (float)(std::rand() % 100) / 100;
     float rand2 = (float)(std::rand() % 100) / 100;
@@ -162,7 +172,7 @@ int main() {
         shader->setFloat4("ourColor", redValue, greenValue, blueValue, 1.0f);
         glm::mat4 view2 = glm::rotate(view, glm::radians(angle), glm::vec3(rand1, rand2, rand3));
         shader->setmat4("proj", view2);
-        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, objectList[0]->getIndexesSize(), GL_UNSIGNED_INT, 0);
         //glDrawArrays(GL_TRIANGLES, 0, 3);
 
         glfwSwapBuffers(window); //Swaps Window buffers to avoid flickering

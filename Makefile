@@ -5,7 +5,7 @@ CFLAGS =  -std=c++11
 OPENGL = -lglfw3 -lGL -lX11
 #OPENGL = -lglut -lGLU -lGL -lGLEW -lglfw  
 
-SRCS =	main.cpp glad.c shader.cpp
+SRCS =	main.cpp glad.c shader.cpp parser.cpp dotObj.cpp
 
 all: COMP
 
