@@ -1,17 +1,17 @@
 #version 430 core
 
 layout (location = 0) in vec3 aPos;
-//layout (location = 1) in vec3 triangleVector1;
+layout (location = 1) in vec2 aTexCoord;
+
+out vec4 triangleVector;
+out vec2 TexCoord;
 
 uniform mat4 proj;
-out vec4 triangleVector;
-
-out float mygl_VertexID2;
 
 void main()
 {
+    TexCoord = aTexCoord;
     gl_Position = proj * vec4(aPos, 1.0);
-    //mygl_VertexID2 = float(gl_VertexID);
     if (gl_VertexID % 5 == 0) {
         triangleVector = vec4(96.0f / 255.0f, 68.0f/ 255.0f, 57.0f / 255.0f, 1.0f);
     }

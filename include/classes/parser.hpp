@@ -8,7 +8,7 @@
 #include <iostream>
 #include <vector>
 
-#include <classes/dotObj.h>
+#include <classes/dotObj.hpp>
   
 
 class Parser

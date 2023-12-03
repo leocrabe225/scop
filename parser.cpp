@@ -1,4 +1,4 @@
-#include <classes/parser.h>
+#include <classes/parser.hpp>
 
 Parser::Parser() {
 }

@@ -1,4 +1,4 @@
-#include "classes/dotObj.h"
+#include <classes/dotObj.hpp>
 
 DotObj::DotObj() : DotObj("Default name") {}
 
@@ -49,8 +49,32 @@ void DotObj::computeCenterMatrix() {
         }
         i = (i + 1) % 3;
     }
-    std::cout << -(minX + maxX) / 2 << " " << -(minY + maxY) / 2 << " " << -(minZ + maxZ) / 2 << std::endl;
+    if (debugMode) {
+        std::cout << -(minX + maxX) / 2 << " " << -(minY + maxY) / 2 << " " << -(minZ + maxZ) / 2 << std::endl;
+    }
     centerMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-(minX + maxX) / 2, -(minY + maxY) / 2, -(minZ + maxZ) / 2));
+    if (textureOn) {
+        //computeTextureCoords();
+        UVunwrapping(glm::vec3(minX,minY,minZ), glm::vec3(maxX,maxY,maxZ));
+    }
+}
+
+void DotObj::UVunwrapping(glm::vec3 minBounds, glm::vec3 maxBounds) {
+    float ratio = 15;
+    glm::vec3 center = 0.5f * (minBounds + maxBounds);
+    glm::vec3 extents = 0.5f * (maxBounds - minBounds);
+    // Compute UV coordinates based on planar mapping
+    for (size_t i = 0; i < vertices.size(); i += 3) {
+        glm::vec3 vertex(vertices[i], vertices[i + 1], vertices[i + 2]);
+        glm::vec3 localPos = vertex - center;
+
+        float u = (atan2(localPos.z, localPos.x) + glm::pi<float>()) / (2.0f * glm::pi<float>());
+        float v = (asin(localPos.y / extents.y) + glm::half_pi<float>()) / glm::pi<float>();
+
+        // Store the UV coordinates in your DotObj data
+        // Assuming vertices have XYZ coordinates
+        texturedVertices.insert(texturedVertices.end(), {vertices[i], vertices[i+1], vertices[i+2], u * ratio, v * ratio});
+    }
 }
 
 void DotObj::setMaterialName(std::string materialName) {
@@ -68,12 +92,35 @@ std::string DotObj::getMaterialName() const {
     return materialName;
 }
 
-float* DotObj::getVerticesData() const {
-    return (float*)vertices.data();
+std::vector<float> DotObj::getVertices(VertexType type) const {
+    if (type == VertexType::TEXTURED) {
+        return texturedVertices;
+    }
+    else {
+        return vertices;
+    }
 }
 
-std::size_t DotObj::getVerticesSize() const {
-    return vertices.size() * sizeof(*vertices.data());
+std::vector<u_int> DotObj::getIndexes() const {
+    return indexes;
+}
+
+float* DotObj::getVerticesData(VertexType type) const {
+    if (type == VertexType::TEXTURED) {
+        return (float*)texturedVertices.data();
+    }
+    else {
+        return (float*)vertices.data();
+    }
+}
+
+std::size_t DotObj::getVerticesSize(VertexType type) const {
+    if (type == VertexType::TEXTURED) {
+        return texturedVertices.size() * sizeof(*texturedVertices.data());
+    }
+    else {
+        return vertices.size() * sizeof(*vertices.data());
+    }
 }
 
 u_int* DotObj::getIndexesData() const {
