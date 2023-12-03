@@ -49,6 +49,7 @@ std::vector<DotObj*> Parser::parseFile(std::string fileName)
             printError(line);
         }
     }
+    currentObject->computeCenterMatrix();
     return (objectList);
 }
 

@@ -3,6 +3,9 @@
 
 #include <iostream>
 #include <vector>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
   
 
 class DotObj
@@ -19,13 +22,16 @@ class DotObj
         std::size_t getVerticesSize() const;
         u_int* getIndexesData() const;
         std::size_t getIndexesSize() const;
+        glm::mat4 getCenterMatrix() const;
 
         void addVertex(float xCoordinate, float yCoordinate, float zCoordinate);
         void addTriangle(u_int vertex1, u_int vertex2, u_int vertex3);
+        void computeCenterMatrix();
         void setMaterialName(std::string materialName);
     private :
         std::vector<float> vertices;
         std::vector<u_int> indexes;
+        glm::mat4 centerMatrix;
         std::string name;
         std::string materialName;
         bool debugMode = true;

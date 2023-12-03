@@ -3,10 +3,14 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/euler_angles.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/quaternion.hpp>
 
 #include <classes/shader.h>
 #include <classes/parser.h>
 
+#include <iomanip>
 #include <iostream>
 #include <math.h>
 
@@ -15,15 +19,84 @@
 #define DEFAULT_WINDOW_WIDTH 800
 #define DEFAULT_WINDOW_HEIGHT 600
 
+void printMat4(const glm::mat4& matrix, int precision = 6) {
+    const float* matData = glm::value_ptr(matrix);
+
+    std::cout << "Matrix 4x4:" << std::endl;
+    for (int i = 0; i < 4; ++i) {
+        for (int j = 0; j < 4; ++j) {
+            // Set precision for floating-point output
+            std::cout << std::fixed << std::setw(precision + 5) << std::setprecision(precision) << matData[i * 4 + j] << "\t";
+        }
+        std::cout << std::endl;
+    }
+}
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) //callback called by GLFW whevenever window is resized
 {
     glViewport(0, 0, width, height); // We tell openGL the new size of the window
 }
 
+glm::vec3 objectPosition = glm::vec3(0.0f, 0.0f, -10.0f);
+glm::mat4 objectRotation = glm::mat4(1);
+glm::quat objectQuaternion = glm::angleAxis(float(0), glm::vec3(0.0f, 0.0f, 1.0f));;
+
 void processInput(GLFWwindow *window)
 {
+    const float objectSpeed = 0.05f;
+    const float objectRotationSpeed = 0.01f;
+
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) // Check if Escape key is pressed
         glfwSetWindowShouldClose(window, true); // Tell GLFW that window should close (The loop will close)
+
+    if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) // Check if Escape key is pressed
+        objectPosition += glm::vec3(0, 0, -objectSpeed);
+
+    if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) // Check if Escape key is pressed
+        objectPosition += glm::vec3(0, 0, objectSpeed);
+
+    if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) // Check if Escape key is pressed
+        objectPosition += glm::vec3(objectSpeed, 0, 0);
+
+    if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) // Check if Escape key is pressed
+        objectPosition += glm::vec3(-objectSpeed, 0, 0);
+
+    if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) // Check if Escape key is pressed
+        objectPosition += glm::vec3(0, objectSpeed, 0);
+
+    if(glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) // Check if Escape key is pressed
+        objectPosition += glm::vec3(0, -objectSpeed, 0);
+
+
+
+    if(glfwGetKey(window, GLFW_KEY_KP_8) == GLFW_PRESS) {
+        objectQuaternion = glm::angleAxis(-objectRotationSpeed, glm::vec3(1.0f, 0.0f, 0.0f)) * objectQuaternion;
+    }
+
+    if(glfwGetKey(window, GLFW_KEY_KP_5) == GLFW_PRESS) {
+        objectQuaternion = glm::angleAxis(objectRotationSpeed, glm::vec3(1.0f, 0.0f, 0.0f)) * objectQuaternion;
+    }  
+
+    if(glfwGetKey(window, GLFW_KEY_KP_4) == GLFW_PRESS) {
+        objectQuaternion = glm::angleAxis(-objectRotationSpeed, glm::vec3(0.0f, 1.0f, 0.0f)) * objectQuaternion;
+    }
+
+    if(glfwGetKey(window, GLFW_KEY_KP_6) == GLFW_PRESS) {
+        objectQuaternion = glm::angleAxis(objectRotationSpeed, glm::vec3(0.0f, 1.0f, 0.0f)) * objectQuaternion;
+    }
+
+    if(glfwGetKey(window, GLFW_KEY_KP_7) == GLFW_PRESS) {
+        objectQuaternion = glm::angleAxis(objectRotationSpeed, glm::vec3(0.0f, 0.0f, 1.0f)) * objectQuaternion;
+    }
+
+    if(glfwGetKey(window, GLFW_KEY_KP_9) == GLFW_PRESS) {
+        objectQuaternion = glm::angleAxis(-objectRotationSpeed, glm::vec3(0.0f, 0.0f, 1.0f)) * objectQuaternion;
+    }
+
+    objectRotation = glm::toMat4(objectQuaternion);
+
+    printMat4(objectRotation);
+
 }
 
 int main(int argc, char **argv) {
@@ -61,7 +134,6 @@ int main(int argc, char **argv) {
     
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback); // We tell glfw which function to call whenever window is resized
 
-    //std::cout << "Project is alive" << std::endl;
 
     Shader *shader = new Shader("vertex_shader.glsl", "fragment_shader.glsl");
     shader->use();
@@ -74,57 +146,6 @@ int main(int argc, char **argv) {
 
     std::srand(std::time(nullptr));
 
-    float offset  = 0.0f;
-    /*float *vertices = new float[48];
-    for (int z = 0; z < 2; z++) {
-        for (int y = 0; y < 2; y++) {
-            for (int x = 0; x < 2; x++) {
-                vertices[(z * 2 * 2 + y * 2 + x) * 6] = -0.5f + (float)x;
-                vertices[(z * 2 * 2 + y * 2 + x) * 6 + 1] = -0.5f + (float)y;
-                vertices[(z * 2 * 2 + y * 2 + x) * 6 + 2] = -0.5f + (float)z;
-                vertices[(z * 2 * 2 + y * 2 + x) * 6 + 3] = (float)(std::rand() % 256) / 256;
-                vertices[(z * 2 * 2 + y * 2 + x) * 6 + 4] = (float)(std::rand() % 256) / 256;
-                vertices[(z * 2 * 2 + y * 2 + x) * 6 + 5] = (float)(std::rand() % 256) / 256;
-                }
-        }
-    }*/
-    float vertices[] = {
-        0.5f,  0.5f, 0.0f,  // front top right
-        (float)(std::rand() % 256) / 256, (float)(std::rand() % 256) / 256, (float)(std::rand() % 256) / 256,
-        0.5f, -0.5f, 0.0f,  // front bottom right
-        (float)(std::rand() % 256) / 256, (float)(std::rand() % 256) / 256, (float)(std::rand() % 256) / 256,
-        -0.5f, -0.5f, 0.0f,  // front bottom left
-        (float)(std::rand() % 256) / 256, (float)(std::rand() % 256) / 256, (float)(std::rand() % 256) / 256,
-        -0.5f,  0.5f, 0.0f,   // front top left
-        (float)(std::rand() % 256) / 256, (float)(std::rand() % 256) / 256, (float)(std::rand() % 256) / 256,
-        0.5f,  0.5f, 1.0f,  // back top right
-        (float)(std::rand() % 256) / 256, (float)(std::rand() % 256) / 256, (float)(std::rand() % 256) / 256,
-        0.5f, -0.5f, 1.0f,  // back bottom right
-        (float)(std::rand() % 256) / 256, (float)(std::rand() % 256) / 256, (float)(std::rand() % 256) / 256,
-        -0.5f, -0.5f, 1.0f,  // back bottom left
-        (float)(std::rand() % 256) / 256, (float)(std::rand() % 256) / 256, (float)(std::rand() % 256) / 256,
-        -0.5f,  0.5f, 1.0f, // back top left
-        (float)(std::rand() % 256) / 256, (float)(std::rand() % 256) / 256, (float)(std::rand() % 256) / 256,
-    };
-    /*for (int i = 0; i < 48; i += 6) {
-        std::cout << vertices[i] << " " << vertices[i+1] << " " << vertices[i+2]<< std::endl;
-        std::cout << vertices[i+3] << " " << vertices[i+4] << " " << vertices[i+5] << std::endl << std::endl;
-    }
-    std::cout  << (float)(std::rand() % 256) / 256 << " " << (float)(std::rand() % 256) / 256 << " " << (float)(std::rand() % 256) / 256  << std::endl;*/
-    unsigned int indices[] = {  // note that we start from 0!
-        0, 1, 3,   // first triangle
-        1, 2, 3 ,   // second triangle
-        0,1,4,
-        1,4,5,
-        2,3,7,
-        2,6,7,
-        4,5,6,
-        4,6,7,
-        1,2,5,
-        2,5,6,
-        0,3,4,
-        3,4,7
-    };
     unsigned int VBO; // Vertex buffer objects
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -145,9 +166,7 @@ int main(int argc, char **argv) {
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); //draw as lines
     //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // default draw (filled)
 
-    glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float)DEFAULT_WINDOW_WIDTH/(float)DEFAULT_WINDOW_HEIGHT, 0.1f, 100.0f);
-    glm::mat4 view = glm::mat4(1.0f);
-    view = proj * glm::translate(view, glm::vec3(0.0f, 0.0f, -10.0f));
+    
     
     float rand1 = (float)(std::rand() % 100) / 100;
     float rand2 = (float)(std::rand() % 100) / 100;
@@ -156,22 +175,18 @@ int main(int argc, char **argv) {
     rand1 /= normalize;
     rand2 /= normalize;
     rand3 /= normalize;
-    
-    float angle = 0;
 
     while(!glfwWindowShouldClose(window)) //If window has not been instructed to close, continue
     {
-        angle += 0.5f;
+        //angle += 0.01f;
         processInput(window);
 
         glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT); // Clears window with set clear color
-        float timeValue = glfwGetTime();
-        float greenValue = sin(timeValue * 3) / 2.0f + 0.5f;
-        float redValue = sin(timeValue * 2) / 2.0f + 0.5f;
-        float blueValue = sin(timeValue * 1) / 2.0f + 0.5f;
-        shader->setFloat4("ourColor", redValue, greenValue, blueValue, 1.0f);
-        glm::mat4 view2 = glm::rotate(view, glm::radians(angle), glm::vec3(rand1, rand2, rand3));
-        shader->setmat4("proj", view2);
+        glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float)DEFAULT_WINDOW_WIDTH/(float)DEFAULT_WINDOW_HEIGHT, 0.1f, 100.0f);
+        glm::mat4 matrix = glm::mat4(1.0f);
+        matrix = proj * glm::translate(matrix, objectPosition) * objectRotation * objectList[0]->getCenterMatrix();
+    
+        shader->setmat4("proj", matrix);
         glDrawElements(GL_TRIANGLES, objectList[0]->getIndexesSize(), GL_UNSIGNED_INT, 0);
         //glDrawArrays(GL_TRIANGLES, 0, 3);
 
