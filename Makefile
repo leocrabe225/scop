@@ -5,7 +5,7 @@ CFLAGS =  -std=c++11
 OPENGL = -lglfw3 -lGL -lX11
 #OPENGL = -lglut -lGLU -lGL -lGLEW -lglfw  
 
-SRCS =	main.cpp glad.c shader.cpp parser.cpp dotObj.cpp stb_image.cpp utils.cpp textureLoader.cpp texture.cpp window.cpp inputHandler.cpp vertexArrayObject.cpp
+SRCS =	main.cpp glad.c shader.cpp parser.cpp dotObj.cpp stb_image.cpp utils.cpp textureLoader.cpp texture.cpp window.cpp inputHandler.cpp vertexArrayObject.cpp Game.cpp VertexArrayObjectHandler.cpp ElementArrayBuffer.cpp
 
 all: COMP
 

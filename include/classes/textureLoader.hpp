@@ -10,10 +10,10 @@
 class TextureLoader
 {
     public:
-        TextureLoader();
-        ~TextureLoader();
-
-        Texture loadTexture(std::string fileName);
+        static Texture loadTexture(std::string fileName);
+    private:
+        static bool isReady;
+        static void init();
 };
 
 #endif

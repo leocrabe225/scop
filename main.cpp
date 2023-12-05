@@ -1,60 +1,56 @@
 #include <main.hpp>
 
 int main(int argc, char **argv) {
-    if (argc < 2) {
-        return (1);
-    }
-    Parser *parser = new Parser();
-    std::vector<DotObj*> objectList = parser->parseFile(argv[1]);
-    if (objectList.size() == 0) {
-        return (1);
-    }
+	if (argc < 2) {
+		return (1);
+	}
+	Parser *parser = new Parser();
+	std::vector<DotObj*> objectList = parser->parseFile(argv[1]);
+	if (objectList.size() == 0) {
+		return (1);
+	}
 
-    Window *window = new Window(objectList[0]->getName().c_str(), DrawMode::FILL);
+	Window *window = new Window(objectList[0]->getName().c_str(), DrawMode::FILL);
 
-    InputHandler *inputHandler = new InputHandler(window->getWindow());
+	InputHandler *inputHandler = new InputHandler(window->getWindow());
+	Game *game = new Game();
+	inputHandler->addCallback((I_Input*)game);
+	inputHandler->addCallback((I_Input*)window);
 
-    TextureLoader *textureLoader = new TextureLoader();
-    Texture texture = textureLoader->loadTexture("../resources/wall.jpg");
+	Texture texture = TextureLoader::loadTexture("../resources/wall.jpg");
 
-    Shader *shader = new Shader("vertex_shader.glsl", "fragment_shader.glsl");
-    shader->use();
+	Shader *shader = new Shader("vertex_shader.glsl", "fragment_shader.glsl");
+	shader->use();
 
-    VertexArrayObject *VAO_1 = new VertexArrayObject(objectList[0]->getVertices(VertexType::TEXTURED), objectList[0]->getIndexes());
-    VAO_1->addVertexAttribute(0,3,GL_FLOAT);
-    VAO_1->addVertexAttribute(1,2,GL_FLOAT);
+	VertexArrayObjectHandler *vertexArrayObjectHandler = new VertexArrayObjectHandler();
 
-    VertexArrayObject *VAO_2 = new VertexArrayObject(VAO_1->getEBO(), objectList[0]->getVertices(VertexType::DEFAULT));
-    VAO_2->addVertexAttribute(0,3,GL_FLOAT);
+	VertexArrayObject *vertexArrayObject = new VertexArrayObject(objectList[0]->getVertices(VertexType::TEXTURED), objectList[0]->getIndexes());
+	vertexArrayObject->addVertexAttribute(0,3,GL_FLOAT);
+	vertexArrayObject->addVertexAttribute(1,2,GL_FLOAT);
+	u_int texturedVAO = vertexArrayObjectHandler->AddVAO(vertexArrayObject);
 
-    VertexArrayObject *activeVAO = VAO_2;
-    while(!glfwWindowShouldClose(window->getWindow())) //If window has not been instructed to close, continue
-    {
-        inputHandler->handleInput();
-        glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT); // Clears window with set clear color
-        if (inputHandler->getIsTextureApplied()) {
-            if (activeVAO != VAO_1) {
-                VAO_2->unbind();
-                VAO_1->bind();
-                activeVAO = VAO_1;
-            }
-        }
-        else if (activeVAO != VAO_2) {
-            VAO_1->unbind();
-            VAO_2->bind();
-            activeVAO = VAO_2;
-        }
+	vertexArrayObject = new VertexArrayObject(vertexArrayObjectHandler->GetVAO(texturedVAO)->GetEBO(), objectList[0]->getVertices(VertexType::DEFAULT));
+	vertexArrayObject->addVertexAttribute(0,3,GL_FLOAT);
+	u_int defaultVAO = vertexArrayObjectHandler->AddVAO(vertexArrayObject);
 
-        glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float)DEFAULT_WINDOW_WIDTH/(float)DEFAULT_WINDOW_HEIGHT, 0.1f, 100.0f);
-        glm::mat4 matrix = glm::mat4(1.0f);
-        matrix = proj * glm::translate(matrix, inputHandler->getObjectPosition()) * glm::toMat4(inputHandler->getObjectQuaternion()) * objectList[0]->getCenterMatrix();
-        shader->setmat4("proj", matrix);
+	while(window->ShouldContinue())
+	{
+		inputHandler->handleInput();
+		window->Clear();
+		if (game->getIsTextureApplied()) {
+			vertexArrayObjectHandler->Bind(texturedVAO);
+		}
+		else {
+			vertexArrayObjectHandler->Bind(defaultVAO);
+		}
 
-        glDrawElements(GL_TRIANGLES, objectList[0]->getIndexesSize(), GL_UNSIGNED_INT, 0);
-        glfwSwapBuffers(window->getWindow()); //Swaps Window buffers to avoid flickering
-        glfwPollEvents(); //Checks for event and calls callbacks (framebuffer_size_callback wouldn't be called if it wasn't for this function)
-    }
+		glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float)DEFAULT_WINDOW_WIDTH/(float)DEFAULT_WINDOW_HEIGHT, 0.1f, 100.0f);
+		glm::mat4 matrix = glm::mat4(1.0f);
+		matrix = proj * glm::translate(matrix, game->getObjectPosition()) * glm::toMat4(game->getObjectQuaternion()) * objectList[0]->getCenterMatrix();
+		shader->setmat4("proj", matrix);
 
-    glfwTerminate(); // clean/delete GLFW resources that were allocated
-    return 0;
+		vertexArrayObjectHandler->Draw();
+		window->SwapBuffersAndPollEvents();
+	}
+	return 0;
 }

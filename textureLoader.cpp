@@ -1,18 +1,10 @@
-#include <classes/textureLoader.hpp>  // Make sure to include the corresponding header file
+#include <classes/textureLoader.hpp>
 
-TextureLoader::TextureLoader() {
-    if (!glfwGetCurrentContext()) {
-        std::cout << "TextureLoader cannot be used before a glfw context has been initialized" << std::endl;
-        exit(1);
-    }
-    stbi_set_flip_vertically_on_load(true);
-}
-
-TextureLoader::~TextureLoader() {
-    // Destructor implementation, if needed
-}
+bool TextureLoader::isReady = false;
 
 Texture TextureLoader::loadTexture(std::string fileName) {
+    if (!isReady) init();
+
     int width, height, nrChannels;
     unsigned char* data = stbi_load(fileName.c_str(), &width, &height, &nrChannels, 0);
 
@@ -29,4 +21,13 @@ Texture TextureLoader::loadTexture(std::string fileName) {
         std::cout << "Failed to load texture : " << fileName << std::endl;
         exit(1);
     }
+}
+
+void TextureLoader::init() {
+    if (!glfwGetCurrentContext()) {
+        std::cout << "TextureLoader cannot be used before a glfw context has been initialized" << std::endl;
+        exit(1);
+    }
+    stbi_set_flip_vertically_on_load(true);
+    isReady = true;
 }

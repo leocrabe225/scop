@@ -15,6 +15,8 @@
 #include <classes/window.hpp>
 #include <classes/inputHandler.hpp>
 #include <classes/vertexArrayObject.hpp>
+#include <classes/Game.hpp>
+#include <classes/VertexArrayObjectHandler.hpp>
 
 #include <utils.hpp>
 

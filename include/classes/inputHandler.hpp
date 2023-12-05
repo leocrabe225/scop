@@ -2,6 +2,7 @@
 #define INPUTHANDLER_H
 
 #include <iostream>
+#include <vector>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
@@ -9,6 +10,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
+#include <interfaces/Interface_Input.hpp>
 
 class InputHandler
 {
@@ -16,17 +18,15 @@ class InputHandler
         InputHandler(GLFWwindow *window);
         ~InputHandler();
 
-        void handleInput();
-
-        bool getIsTextureApplied() const;
-        glm::quat getObjectQuaternion() const;
-        glm::vec3 getObjectPosition() const;
+        void addCallback(I_Input*);
+		void handleInput();
     private:
-        glm::quat objectQuaternion = glm::angleAxis(float(0), glm::vec3(0.0f, 0.0f, 1.0f));
-        glm::vec3 objectPosition = glm::vec3(0.0f, 0.0f, -10.0f);
+        std::vector<I_Input*> callbackVector;
         GLFWwindow *window;
-        bool isEnterPressed = false;
-        bool isTextureApplied = false;
+        int keyMap[GLFW_KEY_LAST + 1] = {0};
+		u_char keyState[KEY_LAST + 1] = {0};
+
+        void MapKeys();
 };
 
 #endif
